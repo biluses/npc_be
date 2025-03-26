@@ -5,6 +5,7 @@ const UserValidator = {
     userRegisterValidationSchema: {
         body: Joi.object({
             email: Joi.string().email().required(),
+            password: Joi.string(),
             loginType: Joi.string().required(),
             username: Joi.string().required(),
             address1: Joi.string().required(),

@@ -6,7 +6,7 @@ exports.up = function (knex) {
         table.increments("id").primary().index();
         table.string("secretId").notNullable().index();
         table.string("email").index().notNullable();
-        table.string("password").notNullable();
+        table.string("password").nullable();
         table.string("loginType").notNullable();
         table.string("googleId").nullable();
         table.string("appleId").nullable();

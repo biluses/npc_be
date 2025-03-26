@@ -20,6 +20,7 @@ import {
 
 import publicApiRoutesV1 from './src/routes/public_api_v1';
 import apiRoutesV1 from './src/routes/api_v1';
+import adminRoutesV1 from './src/routes/admin_routes'
 import apiMiddleware from './src/middleware/apiAuth';
 import errorHandler from './src/middleware/errorHandler';
 
@@ -45,6 +46,7 @@ app.use(upload.any());
 // Middleware to parse JSON bodies
 app.use('/api/v1', apiMiddleware, apiRoutesV1);
 app.use('/public/api/v1', publicApiRoutesV1);
+app.use("/admin/api/v1", apiMiddleware, adminRoutesV1)
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

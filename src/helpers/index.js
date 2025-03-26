@@ -119,14 +119,14 @@ export const sendMail = async function (to = "", subject = "", html = "", attach
 }
 
 export const generateSecretId = async function (isAdmin) {
-    let secret_id = uuidv4()
+    let secretId = uuidv4()
     if(isAdmin){
-      var isSecretData = await Admin.findOne({ where: { secret_id: secret_id } })
+      var isSecretData = await Admin.findOne({ where: { secretId: secretId } })
     }else{
-      var isSecretData = await User.findOne({ where: { secret_id: secret_id } })
+      var isSecretData = await User.findOne({ where: { secretId: secretId } })
     }
     if (isSecretData) {
       generateSecretId();
     }
-    return secret_id;
+    return secretId;
   }

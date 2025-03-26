@@ -12,22 +12,22 @@ const UserServices = {
             where: { email, isDeleted: false }
         });
 
-        if (!user) {
-            return generateResponse(req, res, StatusCodes.BAD_REQUEST, false, "EmailId already exist");
+        if (user) {
+            throw new Error("EmailId already exists");
         }
 
         if (loginType !== 'email' && !socialId) {
-            return generateResponse(req, res, StatusCodes.BAD_REQUEST, false, "SocialId is required");
+            throw new Error("SocialId is required");
         }
 
         if (loginType === 'email' && !password) {
-			return generateResponse(req, res, StatusCodes.BAD_REQUEST, false, "Password is required");
-		}
+            throw new Error("Password is required");
+        }
 
         let userObj = {
-            secretId: generateSecretId(false),
+            secretId: await generateSecretId(false),
             email,
-            password,
+            password: await hashPassword(password),
             loginType,
             username,
             profilePicture,
@@ -40,24 +40,22 @@ const UserServices = {
         }
 
         if (loginType === 'google') {
-			userObj.googleId = socialId;
-		} else if (loginType === 'apple') {
-			userObj.appleId = socialId;
-		}
+            userObj.googleId = socialId;
+        } else if (loginType === 'apple') {
+            userObj.appleId = socialId;
+        }
 
         const newUser = await User.create(userObj);
-        let resObj = {
-            user: newUser
-        }
+        delete newUser.dataValues.password;
 
-        if(loginType != "email") {
-            resObj.token = issueAccessToken({
-                secretId: newUser.secretId,
-                loginType: "user",
-            });
-        }
+        let token = issueAccessToken({
+            secretId: newUser.secretId,
+            loginType: "user",
+        });
 
-        return resObj;
+        return {
+            data: { user: newUser, token }
+        };
     },
 
     async login(req, res, next) {
@@ -67,12 +65,12 @@ const UserServices = {
         });
 
         if (!user) {
-            return generateResponse(req, res, StatusCodes.BAD_REQUEST, false, "Incorrect Email Id");
+            throw new Error("Incorrect Email Id");
         }
 
         const isMatch = await verifyPassword(password, user.password);
         if (!isMatch) {
-            return generateResponse(req, res, StatusCodes.BAD_REQUEST, false, "Incorrect Password");
+            throw new Error("Incorrect Password");
         }
 
         let token = issueAccessToken({

@@ -10,6 +10,6 @@ const adminModuleController = require("../controllers/admin")
 // =============================================================================================================================
 
 // admin APIs
-router.get('/admin/get-profile', adminModuleController.adminController.getProfileDetails);
+router.get('/get-profile', adminModuleController.adminController.getProfileDetails);
 
 module.exports = router;

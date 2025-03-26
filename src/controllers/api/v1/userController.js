@@ -1,5 +1,4 @@
-import { User } from "../../../models"
-const UserServices = require('../../services/user/userServices');
+const UserServices = require('../../../services/user/userServices');
 
 const userController = {
     // User register(public API)

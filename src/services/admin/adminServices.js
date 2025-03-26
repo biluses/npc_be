@@ -11,12 +11,12 @@ const AdminServices = {
         });
 
         if (!user) {
-            return generateResponse(req, res, StatusCodes.BAD_REQUEST, false, "Incorrect Email Id");
+            throw new Error("Incorrect Email Id");
         }
 
         const isMatch = await verifyPassword(password, user.password);
         if (!isMatch) {
-            return generateResponse(req, res, StatusCodes.BAD_REQUEST, false, "Incorrect Password");
+            throw new Error("Incorrect Password");
         }
 
         let token = issueAccessToken({

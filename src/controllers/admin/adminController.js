@@ -8,7 +8,7 @@ const adminController = {
     login: async (req, res, next) => {
         try {
             const adminLoginResponse = await AdminServices.login(req, res, next);
-            return generateResponse(req, res, StatusCodes.OK, true, "College data edit successfully !", adminLoginResponse);
+            return generateResponse(req, res, StatusCodes.OK, true, "Admin login successfully !", adminLoginResponse);
         } catch (error) {
             return generateResponse(req, res, StatusCodes.INTERNAL_SERVER_ERROR, false, error.message || "Something went wrong!");
         }
@@ -18,7 +18,7 @@ const adminController = {
     getProfileDetails: async (req, res, next) => {
         try {
             const adminProfileResponse = await AdminServices.getProfileDetails(req, res, next);
-            return generateResponse(req, res, StatusCodes.OK, true, "College data edit successfully !", adminProfileResponse);
+            return generateResponse(req, res, StatusCodes.OK, true, "Admin data get successfully !", adminProfileResponse);
 
         } catch (error) {
             console.log('error', error)
