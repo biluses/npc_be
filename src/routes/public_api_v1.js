@@ -15,4 +15,7 @@ router.post('/admin/auth/login', validate(dataValidator.adminValidator.adminLogi
 router.post('/user/auth/login', validate(dataValidator.userValidator.userLoginValidationSchema), APIController.userController.login);
 router.post('/user/auth/register', validate(dataValidator.userValidator.userRegisterValidationSchema), APIController.userController.register);
 
+// Policy APIs
+router.get('/policy/get-policy-by-type', APIController.policyController.getPolicy);
+
 module.exports = router;

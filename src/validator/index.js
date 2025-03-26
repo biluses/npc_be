@@ -1,7 +1,8 @@
 
 // admin module validator 
 const adminValidator = require('./admin/adminValidator');
-const userValidator = require('./user/userValidator')
+const userValidator = require('./user/userValidator');
+const policyValidator = require('./policy/policyValidator');
 
 const dataValidator = {
     // admin validator
@@ -9,6 +10,9 @@ const dataValidator = {
 
     // user Validator
     userValidator: userValidator,
+
+    //policy Validator
+    policyValidator: policyValidator
 }
 
 module.exports = dataValidator;

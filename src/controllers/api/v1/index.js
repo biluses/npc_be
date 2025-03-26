@@ -1,8 +1,10 @@
 
 const userController = require('./userController');
+const policyController = require('./policyController')
 
-const userModuleController = {
+const apiModuleController = {
     userController: userController,
+    policyController: policyController
 }
 
-module.exports = userModuleController;
+module.exports = apiModuleController;
