@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Zero NPC</title>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+    <%- include ('./layout/layout') %>
+        <h1 style="color: #EEFF00">Verification OTP</h1>
+        <p>Dear <%= name %>,</p>
+        <p> We received a request to reset the password for your ZERO NPC account. To proceed with resetting your
+            password, please use the One-Time Password (OTP) provided below:</p>
+        <p>Your OTP is: <%= otp %>
+        </p>
+        <p>Please enter this OTP on the website to securely reset your password.</p>
+        <p style="margin-top: 40px">Best regards,</p>
+        <p>The Zero NPC Team</p>
+        </div>
+        </div>
+</body>
+
+</html>
