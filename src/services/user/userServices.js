@@ -1,7 +1,10 @@
 import { User } from "../../models";
+import { generateSecretId } from "../../helpers"
 const { verifyPassword, hashPassword } = require("../../utils/passwordBcrypt");
 const { issueAccessToken } = require("../../utils/jwtToken");
-import { generateSecretId } from "../../helpers"
+const { UniqueOTP } = require("unique-string-generator");
+const path = require("path");
+const ejs = require('ejs');
 
 
 const UserServices = {
@@ -83,6 +86,101 @@ const UserServices = {
         return {
             data: { user, token }
         };
+    },
+
+    async forgotPassword(req, res, next) {
+        const { email } = req.body;
+
+        let user = await User.findOne({
+            where: { email, isDeleted: false }
+        });
+        console.log('user', user)
+        if (!user) {
+            throw new Error("Invalid Email");
+        }
+
+        let forgotCode = await codeGenerate();
+        async function codeGenerate() {
+            let generatedCode = UniqueOTP(6);
+            var forgotCodeCheck = await User.findOne({  where: { forgotCode: generatedCode } })
+            if (forgotCodeCheck) {
+                codeGenerate();
+            } else {
+                let payload = {
+                    forgotCode: generatedCode
+                }
+                await User.update(payload, {
+                    where: {
+                        id: user.id
+                    }
+                });
+            }
+            return generatedCode;
+        }
+
+        //send mail for otp
+        // const templatePath = path.join(__dirname, '../../../../views/emails', 'send-otp-email.ejs');
+        // const mail_html = await ejs.renderFile(templatePath, { otp: forgotCode, name: user.username });
+        // send_mail(user.email, "Reset Password OTP for ZERO NPC Account", mail_html);
+
+        return {
+            data: { secretId: user.secretId }
+        }
+    },
+
+    async verifyOtp(req, res, next) {
+        const { forgotCode, secretId } = req.body;
+
+        let user = await User.findOne({
+            where: { secretId, isDeleted: false }
+        });
+
+        if (!user) {
+            throw new Error("Invalid secretId");
+        }
+
+        if(forgotCode != user.forgotCode){
+            throw new Error("Invalid OTP");
+        }
+
+        await User.update({ forgotCode: null }, {
+            where: {
+                id: user.id
+            }
+        });
+
+        return {
+            data: { secretId: user.secretId }
+        }
+    },
+
+    async resetPassword(req, res, next) {
+        //const { secretId } = req.loggedInUser;
+        const { secretId, oldPassword, newPassword } = req.body;
+
+        let user = await User.findOne({
+            where: { secretId, isDeleted: false }
+        });
+
+        if (!user) {
+            throw new Error("Invalid User");
+        }
+
+        // const isMatch = await verifyPassword(oldPassword, req.loggedInUser.password);
+		// if (!isMatch) {
+        //     throw new Error("Incorrect Old Password");
+        // }
+
+        let payload = {
+            password: await hashPassword(newPassword)
+        }
+        await User.update(payload, {
+            where: {
+                id: user.id
+            }
+        });
+
+        return true
     },
 
     async getProfileDetails(req, res, next) {

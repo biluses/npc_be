@@ -22,6 +22,26 @@ const UserValidator = {
             password: Joi.string().required(),
         }),
     },
+
+    userForgotValidationSchema: {
+        body: Joi.object({
+            email: Joi.string().email().required(),
+        }),
+    },
+
+    userOtpValidationSchema: {
+        body: Joi.object({
+            forgotCode: Joi.string().required(),
+            secretId: Joi.string().required()
+        }),
+    },
+
+    userResetPasswordValidationSchema: {
+        body: Joi.object({
+            newPassword: Joi.string().required(),
+            secretId: Joi.string().required()
+        }),
+    },
 }
 
 module.exports = UserValidator;

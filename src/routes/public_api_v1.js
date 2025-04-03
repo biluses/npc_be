@@ -14,6 +14,9 @@ router.post('/admin/auth/login', validate(dataValidator.adminValidator.adminLogi
 // User APIs
 router.post('/user/auth/login', validate(dataValidator.userValidator.userLoginValidationSchema), APIController.userController.login);
 router.post('/user/auth/register', validate(dataValidator.userValidator.userRegisterValidationSchema), APIController.userController.register);
+router.post('/user/auth/forgot-password', validate(dataValidator.userValidator.userForgotValidationSchema), APIController.userController.forgotPassword)
+router.post('/user/auth/verify-forgotCode', validate(dataValidator.userValidator.userOtpValidationSchema), APIController.userController.verifyOtp)
+router.post('/user/auth/reset-password', validate(dataValidator.userValidator.userResetPasswordValidationSchema), APIController.userController.resetPassword)
 
 // Policy APIs
 router.get('/policy/get-policy-by-type', APIController.policyController.getPolicy);
