@@ -94,7 +94,6 @@ const UserServices = {
         let user = await User.findOne({
             where: { email, isDeleted: false }
         });
-        console.log('user', user)
         if (!user) {
             throw new Error("Invalid Email");
         }

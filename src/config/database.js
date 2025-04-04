@@ -9,6 +9,13 @@ const sequelize = new Sequelize(
         host: process.env.DB_HOST,
         port: process.env.DB_PORT,
         dialect: process.env.DB_DIALECT,
+        dialectOptions: {
+            charset: process.env.DB_CHARSET,
+        },
+        define: {
+            charset: process.env.DB_CHARSET,
+            collate: process.env.DB_COLLATE,
+        },
     },
 );
 

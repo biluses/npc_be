@@ -120,13 +120,26 @@ export const sendMail = async function (to = "", subject = "", html = "", attach
 
 export const generateSecretId = async function (isAdmin) {
     let secretId = uuidv4()
-    if(isAdmin){
-      var isSecretData = await Admin.findOne({ where: { secretId: secretId } })
-    }else{
-      var isSecretData = await User.findOne({ where: { secretId: secretId } })
+    if (isAdmin) {
+        var isSecretData = await Admin.findOne({ where: { secretId: secretId } })
+    } else {
+        var isSecretData = await User.findOne({ where: { secretId: secretId } })
     }
     if (isSecretData) {
-      generateSecretId();
+        generateSecretId();
     }
     return secretId;
-  }
+}
+
+export const buildCommentTree = function (comments, parentId = null) {
+    const commentTree = [];
+
+    comments
+        .filter(comment => comment.parentId === parentId)
+        .forEach(comment => {
+            const children = buildCommentTree(comments, comment.id);
+            comment.replies = children;
+            commentTree.push(comment);
+        });
+    return commentTree;
+}
