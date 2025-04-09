@@ -1,6 +1,6 @@
 const PostServices = require('../../../services/post/postServices');
 
-const userController = {
+const postController = {
     // POST create(protected API)
     create: async (req, res, next) => {
         try {
@@ -94,4 +94,4 @@ const userController = {
     },
 }
 
-module.exports = userController;
+module.exports = postController;

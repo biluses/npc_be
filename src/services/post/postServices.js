@@ -15,7 +15,7 @@ const PostServices = {
 
         const newPost = await Post.create(postObj);
         return {
-            data: { user: newPost }
+            data: { post: newPost }
         };
     },
 
