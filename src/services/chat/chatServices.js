@@ -119,7 +119,7 @@ const ChatServices = {
         // const tokenId = req.query.tokenId
         let page = req.query.page ? parseInt(req.query.page) : 1;
         let limit = req.query.limit ? parseInt(req.query.limit) : 10;
-        let start = 0 + (page - 1) * limit;
+        let start = (page - 1) * limit;
 
         const findChat = await Chat.findAll({
             limit: limit,

@@ -1,7 +1,7 @@
 
 const Joi = require('joi');
 
-const UserValidator = {
+const PolicyValidator = {
     createPolicyValidationSchema: {
         body: Joi.object({
             type: Joi.string().required(),
@@ -16,4 +16,4 @@ const UserValidator = {
     },
 }
 
-module.exports = UserValidator;
+module.exports = PolicyValidator;

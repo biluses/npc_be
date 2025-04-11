@@ -5,7 +5,9 @@ const PolicyServices = {
         const { type, description } = req.body
 
         const findPolicy = await AllPolicy.findOne({
-            type
+            where: {
+                type: type
+            }
         })
 
         if (findPolicy) {
@@ -62,7 +64,7 @@ const PolicyServices = {
 
     async getPolicyDetailsByType(req, res, next) {
 
-        if(!req.query.type){
+        if (!req.query.type) {
             throw new Error("Type is required");
         }
 
@@ -72,7 +74,7 @@ const PolicyServices = {
             },
         });
 
-        if(!policy){
+        if (!policy) {
             throw new Error("Invalid type");
         }
 

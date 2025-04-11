@@ -8,17 +8,17 @@ io.on('connection', (socket) => {
         if (userIndex === -1) {
             activeUsers.push({ userId: newUserId, socketId: socket.id });
 
-            // await Chat.update(
-            //     {
-            //         messageStatus: "deliver",
-            //     },
-            //     {
-            //         where: {
-            //             receiverId: newUserId,
-            //             messageStatus: 'sent'
-            //         }
-            //     }
-            // );
+            await Chat.update(
+                {
+                    messageStatus: "deliver",
+                },
+                {
+                    where: {
+                        receiverId: newUserId,
+                        messageStatus: 'sent'
+                    }
+                }
+            );
 
             // const buyNFTData = await BuyNFT.findAll({
             //     where: {

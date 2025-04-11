@@ -1,10 +1,10 @@
-const PolicyServices = require('../../services/policy/policyServices');
+const SizeServices = require('../../services/size/sizeServices');
 
-const policyController = {
+const sizeController = {
     create: async (req, res, next) => {
         try {
-            const policyCreateResponse = await PolicyServices.create(req, res, next);
-            return generateResponse(req, res, StatusCodes.OK, true, "Policy create successfully !", policyCreateResponse);
+            const sizeCreateResponse = await SizeServices.create(req, res, next);
+            return generateResponse(req, res, StatusCodes.OK, true, "Size create successfully !", sizeCreateResponse);
         } catch (error) {
             return generateResponse(req, res, StatusCodes.INTERNAL_SERVER_ERROR, false, error.message || "Something went wrong!");
         }
@@ -12,8 +12,8 @@ const policyController = {
 
     update: async (req, res, next) => {
         try {
-            const policyUpdateResponse = await PolicyServices.update(req, res, next);
-            return generateResponse(req, res, StatusCodes.OK, true, "Policy update successfully !", policyUpdateResponse);
+            const sizeUpdateResponse = await SizeServices.update(req, res, next);
+            return generateResponse(req, res, StatusCodes.OK, true, "Size update successfully !", sizeUpdateResponse);
         } catch (error) {
             return generateResponse(req, res, StatusCodes.INTERNAL_SERVER_ERROR, false, error.message || "Something went wrong!");
         }
@@ -21,8 +21,8 @@ const policyController = {
 
     getOne: async (req, res, next) => {
         try {
-            const policyResponse = await PolicyServices.getPolicyDetail(req, res, next);
-            return generateResponse(req, res, StatusCodes.OK, true, "Policy get successfully !", policyResponse);
+            const sizeResponse = await SizeServices.getSizeDetail(req, res, next);
+            return generateResponse(req, res, StatusCodes.OK, true, "Size get successfully !", sizeResponse);
         } catch (error) {
             return generateResponse(req, res, StatusCodes.INTERNAL_SERVER_ERROR, false, error.message || "Something went wrong!");
         }
@@ -30,8 +30,8 @@ const policyController = {
 
     getAll: async (req, res, next) => {
         try {
-            const allPolicyResponse = await PolicyServices.getAllPolicy(req, res, next);
-            return generateResponse(req, res, StatusCodes.OK, true, "All policy get successfully !", allPolicyResponse);
+            const allSizeResponse = await SizeServices.getAllSize(req, res, next);
+            return generateResponse(req, res, StatusCodes.OK, true, "All size get successfully !", allSizeResponse);
 
         } catch (error) {
             console.log('error', error)
@@ -43,4 +43,4 @@ const policyController = {
 
 }
 
-module.exports = policyController;
+module.exports = sizeController;

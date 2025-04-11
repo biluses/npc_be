@@ -1,10 +1,10 @@
-const PolicyServices = require('../../services/policy/policyServices');
+const ColorServices = require('../../services/color/colorServices');
 
-const policyController = {
+const colorController = {
     create: async (req, res, next) => {
         try {
-            const policyCreateResponse = await PolicyServices.create(req, res, next);
-            return generateResponse(req, res, StatusCodes.OK, true, "Policy create successfully !", policyCreateResponse);
+            const colorCreateResponse = await ColorServices.create(req, res, next);
+            return generateResponse(req, res, StatusCodes.OK, true, "Color create successfully !", colorCreateResponse);
         } catch (error) {
             return generateResponse(req, res, StatusCodes.INTERNAL_SERVER_ERROR, false, error.message || "Something went wrong!");
         }
@@ -12,8 +12,8 @@ const policyController = {
 
     update: async (req, res, next) => {
         try {
-            const policyUpdateResponse = await PolicyServices.update(req, res, next);
-            return generateResponse(req, res, StatusCodes.OK, true, "Policy update successfully !", policyUpdateResponse);
+            const colorUpdateResponse = await ColorServices.update(req, res, next);
+            return generateResponse(req, res, StatusCodes.OK, true, "Color update successfully !", colorUpdateResponse);
         } catch (error) {
             return generateResponse(req, res, StatusCodes.INTERNAL_SERVER_ERROR, false, error.message || "Something went wrong!");
         }
@@ -21,8 +21,8 @@ const policyController = {
 
     getOne: async (req, res, next) => {
         try {
-            const policyResponse = await PolicyServices.getPolicyDetail(req, res, next);
-            return generateResponse(req, res, StatusCodes.OK, true, "Policy get successfully !", policyResponse);
+            const colorResponse = await ColorServices.getColorDetail(req, res, next);
+            return generateResponse(req, res, StatusCodes.OK, true, "Color get successfully !", colorResponse);
         } catch (error) {
             return generateResponse(req, res, StatusCodes.INTERNAL_SERVER_ERROR, false, error.message || "Something went wrong!");
         }
@@ -30,8 +30,8 @@ const policyController = {
 
     getAll: async (req, res, next) => {
         try {
-            const allPolicyResponse = await PolicyServices.getAllPolicy(req, res, next);
-            return generateResponse(req, res, StatusCodes.OK, true, "All policy get successfully !", allPolicyResponse);
+            const allColorResponse = await ColorServices.getAllColor(req, res, next);
+            return generateResponse(req, res, StatusCodes.OK, true, "All color get successfully !", allColorResponse);
 
         } catch (error) {
             console.log('error', error)
@@ -43,4 +43,4 @@ const policyController = {
 
 }
 
-module.exports = policyController;
+module.exports = colorController;
