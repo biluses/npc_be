@@ -27,4 +27,10 @@ router.get('/chat/get-chat-list', APIController.chatController.getChatList);
 router.get('/chat/get-message-list', APIController.chatController.getMessageList);
 router.post('/chat/in-out-status', APIController.chatController.inOutStatus);
 
+// Cart APIs
+router.post('/cart/add-cart-item', APIController.cartController.create);
+router.patch('/cart/update-cart-item/:cartId', APIController.cartController.update);
+router.delete('/cart/delete-cart-item/:cartId', APIController.cartController.delete);
+router.get('/cart/get-all-cart-item', APIController.cartController.cartList);
+
 module.exports = router;

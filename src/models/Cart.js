@@ -1,27 +1,24 @@
 module.exports = (sequelize, DataTypes) => {
-    const ProductVariant = sequelize.define(
-        'ProductVariant',
+    const Cart = sequelize.define(
+        'Cart',
         {
             id: {
                 type: DataTypes.INTEGER,
                 primaryKey: true,
                 autoIncrement: true,
             },
-            productId: {
+            userId: {
                 type: DataTypes.INTEGER,
                 allowNull: false
             },
-            colorId: {
+            productVariantId: {
                 type: DataTypes.INTEGER,
-                allowNull: true
-            },
-            sizeId: {
-                type: DataTypes.INTEGER,
-                allowNull: true
+                allowNull: false,
             },
             quantity: {
                 type: DataTypes.INTEGER,
-                defaultValue: 0
+                defaultValue: 1,
+                allowNull: false
             },
             createdAt: {
                 type: DataTypes.DATE,
@@ -33,18 +30,16 @@ module.exports = (sequelize, DataTypes) => {
             }
         },
         {
-            tableName: "productVariant",
+            tableName: "cart",
             timestamps: true
         }
     );
 
-    ProductVariant.associate = function (models) {
+    Cart.associate = function (models) {
         // associations can be defined here
-        ProductVariant.belongsTo(models.Product, { foreignKey: 'productId' });
-        ProductVariant.belongsTo(models.Color, { foreignKey: 'colorId' });
-        ProductVariant.belongsTo(models.Size, { foreignKey: 'sizeId' });
-        ProductVariant.hasMany(models.Cart, { foreignKey: 'productVariantId', as: 'variant' });
+        Cart.belongsTo(models.User, { foreignKey: 'userId' });
+        Cart.belongsTo(models.ProductVariant, { foreignKey: 'productVariantId', as: 'variant' });
     };
 
-    return ProductVariant;
+    return Cart;
 };
