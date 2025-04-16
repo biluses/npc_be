@@ -3,6 +3,7 @@ import { generateSecretId } from "../../helpers"
 const { verifyPassword, hashPassword } = require("../../utils/passwordBcrypt");
 const { issueAccessToken } = require("../../utils/jwtToken");
 const { UniqueOTP } = require("unique-string-generator");
+const { Op } = require("sequelize");
 const path = require("path");
 const ejs = require('ejs');
 
@@ -101,7 +102,7 @@ const UserServices = {
         let forgotCode = await codeGenerate();
         async function codeGenerate() {
             let generatedCode = UniqueOTP(6);
-            var forgotCodeCheck = await User.findOne({  where: { forgotCode: generatedCode } })
+            var forgotCodeCheck = await User.findOne({ where: { forgotCode: generatedCode } })
             if (forgotCodeCheck) {
                 codeGenerate();
             } else {
@@ -138,7 +139,7 @@ const UserServices = {
             throw new Error("Invalid secretId");
         }
 
-        if(forgotCode != user.forgotCode){
+        if (forgotCode != user.forgotCode) {
             throw new Error("Invalid OTP");
         }
 
@@ -166,7 +167,7 @@ const UserServices = {
         }
 
         // const isMatch = await verifyPassword(oldPassword, req.loggedInUser.password);
-		// if (!isMatch) {
+        // if (!isMatch) {
         //     throw new Error("Incorrect Old Password");
         // }
 
@@ -193,6 +194,47 @@ const UserServices = {
         });
 
         return { user: user };
+    },
+
+    async getAllUsers(req, res, next) {
+        const { secretId } = req.loggedInUser;
+
+        let { page, limit, isOwn } = req.query;
+        limit = parseInt(limit) || 10;
+        page = parseInt(page) || 1;
+        const start = (page - 1) * limit;
+        let isNextPage = false;
+
+        const where = {
+            isDeleted: false,
+            id: { [Op.ne]: req.loggedInUser.id }
+        };
+
+        const users = await User.findAll({
+            where,
+            subQuery: false,
+            offset: start,
+            limit: limit + 1,
+            attributes: {
+                exclude: ['password', 'isDeleted', 'updatedAt']
+            }
+        });
+
+        if (!users || users.length === 0) {
+            return {
+                data: {
+                    isNextPage: false,
+                    post: []
+                }
+            };
+        }
+
+        if (users.length > limit) {
+            isNextPage = true;
+            users.pop();
+        }
+
+        return { users };
     }
 }
 

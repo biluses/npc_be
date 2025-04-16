@@ -1,4 +1,4 @@
-import { Size } from '../../models'
+import { Size, ProductVariant } from '../../models'
 
 const SizeServices = {
     async create(req, res, next) {
@@ -39,6 +39,29 @@ const SizeServices = {
         });
 
         return { size: size };
+    },
+
+    async delete(req, res, next) {
+        const sizeId = req.params.id;
+
+        if (sizeId == 1 || sizeId == "1") {
+            throw new Error("You can't delete this size option.");
+        }
+
+        const variantCount = await ProductVariant.count({ where: { sizeId } });
+
+        if (variantCount > 0) {
+            throw new Error("Cannot delete size. It is being used in product variants.");
+        }
+
+        const size = await Size.findByPk(sizeId);
+        if (!size) {
+            throw new Error("Size not found");
+        }
+
+        await size.destroy();
+
+        return true;
     },
 
     async getSizeDetail(req, res, next) {

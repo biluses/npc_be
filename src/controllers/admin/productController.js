@@ -19,6 +19,15 @@ const productController = {
         }
     },
 
+    delete: async (req, res, next) => {
+        try {
+            await ProductServices.delete(req, res, next);
+            return generateResponse(req, res, StatusCodes.OK, true, "Product deleted successfully !");
+        } catch (error) {
+            return generateResponse(req, res, StatusCodes.INTERNAL_SERVER_ERROR, false, error.message || "Something went wrong!");
+        }
+    },
+
     getOne: async (req, res, next) => {
         try {
             const productResponse = await ProductServices.getProductDetail(req, res, next);

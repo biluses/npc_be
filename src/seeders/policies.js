@@ -1,6 +1,6 @@
 exports.seed = async function (knex) {
-    await knex('policy').del()
-    await knex('policy').insert([
+    await knex('allPolicy').del()
+    await knex('allPolicy').insert([
         {
             type: "1",
             description: "This is PRIVACY POLICY"

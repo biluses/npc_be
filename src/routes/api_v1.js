@@ -10,6 +10,7 @@ const APIController = require("../../src/controllers/api/v1")
 
 // User APIs
 router.get('/user/get-profile', APIController.userController.getProfileDetails);
+router.get('/user/get-user-list', APIController.userController.getAllUsers);
 
 // Post APIs
 router.post('/post/create-post', APIController.postController.create);

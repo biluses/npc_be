@@ -65,6 +65,20 @@ const userController = {
         }
     },
 
+    // Get User profile details(protected API)
+    getAllUsers: async (req, res, next) => {
+        try {
+            const usersResponse = await UserServices.getAllUsers(req, res, next);
+            return generateResponse(req, res, StatusCodes.OK, true, "Get user list successfully !", usersResponse);
+
+        } catch (error) {
+            console.log('error', error)
+            return generateResponse(req, res, StatusCodes.INTERNAL_SERVER_ERROR, false, error.message || 'Something went wrong !',
+                { data: {} }
+            );
+        }
+    },
+
 }
 
 module.exports = userController;

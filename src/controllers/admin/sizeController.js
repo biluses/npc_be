@@ -19,6 +19,15 @@ const sizeController = {
         }
     },
 
+    delete: async (req, res, next) => {
+        try {
+            await SizeServices.delete(req, res, next);
+            return generateResponse(req, res, StatusCodes.OK, true, "Size deleted successfully !");
+        } catch (error) {
+            return generateResponse(req, res, StatusCodes.INTERNAL_SERVER_ERROR, false, error.message || "Something went wrong!");
+        }
+    },
+
     getOne: async (req, res, next) => {
         try {
             const sizeResponse = await SizeServices.getSizeDetail(req, res, next);

@@ -21,18 +21,21 @@ router.get('/policy/get-all-policy', adminModuleController.policyController.getA
 // color APIs
 router.post('/color/create-color', adminModuleController.colorController.create);
 router.patch('/color/update-color/:id', validate(dataValidator.colorValidator.updateColorValidationSchema), adminModuleController.colorController.update);
+router.delete('/color/:id', adminModuleController.colorController.delete);
 router.get('/color/get-color', adminModuleController.colorController.getOne);
 router.get('/color/get-all-color', adminModuleController.colorController.getAll);
 
 // size APIs
 router.post('/size/create-size', adminModuleController.sizeController.create);
 router.patch('/size/update-size/:id', validate(dataValidator.sizeValidator.updateSizeValidationSchema), adminModuleController.sizeController.update);
+router.delete('/size/:id', adminModuleController.sizeController.delete);
 router.get('/size/get-size', adminModuleController.sizeController.getOne);
 router.get('/size/get-all-size', adminModuleController.sizeController.getAll);
 
 // product APIs
 router.post('/product/create-product', adminModuleController.productController.create);
 router.patch('/product/update-product/:id', adminModuleController.productController.update);
+router.delete('/product/:id', adminModuleController.productController.delete);
 router.get('/product/get-product', adminModuleController.productController.getOne);
 router.get('/product/get-all-product', adminModuleController.productController.getAll);
 

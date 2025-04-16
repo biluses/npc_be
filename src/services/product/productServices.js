@@ -62,7 +62,7 @@ const ProductServices = {
         const { name, description, price, variants } = req.body;
 
         const product = await Product.findByPk(id);
-        if (!product) return res.status(404).json({ message: "Product not found" });
+        if (!product) throw new Error("Product not found");
 
         await product.update({ name, description, price });
 
@@ -158,6 +158,16 @@ const ProductServices = {
         return { product: updatedProduct };
     },
 
+    async delete(req, res, next) {
+        const product = await Product.findByPk(req.params.id);
+        if (!product) {
+            throw new Error("Product not found");
+        }
+
+        await product.destroy();
+        return true;
+    },
+
     async getProductDetail(req, res, next) {
         const { id } = req.query;
 
@@ -178,7 +188,7 @@ const ProductServices = {
             ]
         });
 
-        if (!product) return res.status(404).json({ message: 'Product not found' });
+        if (!product) throw new Error("Product not found");
 
         // Group by colorId
         const groupedVariants = {};
