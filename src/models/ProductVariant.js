@@ -44,6 +44,7 @@ module.exports = (sequelize, DataTypes) => {
         ProductVariant.belongsTo(models.Color, { foreignKey: 'colorId' });
         ProductVariant.belongsTo(models.Size, { foreignKey: 'sizeId' });
         ProductVariant.hasMany(models.Cart, { foreignKey: 'productVariantId', as: 'variant' });
+        ProductVariant.hasMany(models.OrderItem, { foreignKey: 'productVariantId' });
     };
 
     return ProductVariant;

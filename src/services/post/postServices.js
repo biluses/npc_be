@@ -122,91 +122,82 @@ const PostServices = {
     },
 
     async getAllPost(req, res, next) {
-        try {
-            let { page, limit, isOwn } = req.query;
-            limit = parseInt(limit) || 10;
-            page = parseInt(page) || 1;
-            const start = (page - 1) * limit;
-            let isNextPage = false;
+        let { page, limit, isOwn } = req.query;
+        limit = parseInt(limit) || 10;
+        page = parseInt(page) || 1;
+        const start = (page - 1) * limit;
+        let isNextPage = false;
 
-            const where = {
-                isDeleted: false,
-                userId: isOwn === "true" ? req.loggedInUser.id : { [Op.ne]: req.loggedInUser.id }
-            };
+        const where = {
+            isDeleted: false,
+            userId: isOwn === "true" ? req.loggedInUser.id : { [Op.ne]: req.loggedInUser.id }
+        };
 
-            const posts = await Post.findAll({
-                where,
-                subQuery: false,
-                offset: start,
-                limit: limit + 1,
-                attributes: {
-                    include: [
-                        [fn('COUNT', col('PostLikes.id')), 'likeCount'],
-                        [fn('COUNT', col('comments.id')), 'commentCount']
-                    ]
-                },
+        const posts = await Post.findAll({
+            where,
+            subQuery: false,
+            offset: start,
+            limit: limit + 1,
+            attributes: {
                 include: [
-                    {
-                        model: PostLike,
-                        as: 'PostLikes', // important alias
-                        attributes: [],
-                        required: false
-                    },
-                    {
-                        model: PostComment,
-                        as: 'comments',
-                        attributes: [],
-                        required: false
-                    },
-                    {
-                        model: PostLike,
-                        as: 'UserLike',
-                        where: { userId: req.loggedInUser.id },
-                        attributes: ['id'],
-                        required: false
-                    }
-                ],
-                group: ['Post.id', 'UserLike.id']
-            });
+                    [fn('COUNT', col('PostLikes.id')), 'likeCount'],
+                    [fn('COUNT', col('comments.id')), 'commentCount']
+                ]
+            },
+            include: [
+                {
+                    model: PostLike,
+                    as: 'PostLikes', // important alias
+                    attributes: [],
+                    required: false
+                },
+                {
+                    model: PostComment,
+                    as: 'comments',
+                    attributes: [],
+                    required: false
+                },
+                {
+                    model: PostLike,
+                    as: 'UserLike',
+                    where: { userId: req.loggedInUser.id },
+                    attributes: ['id'],
+                    required: false
+                }
+            ],
+            group: ['Post.id', 'UserLike.id']
+        });
 
-            if (!posts || posts.length === 0) {
-                return {
-                    data: {
-                        isNextPage: false,
-                        post: []
-                    }
-                };
-            }
-
-            if (posts.length > limit) {
-                isNextPage = true;
-                posts.pop();
-            }
-
-            const formattedPosts = posts.map(post => {
-                const data = post.toJSON();
-                data.likeCount = Number(data.likeCount || 0);
-                data.commentCount = Number(data.commentCount || 0);
-                data.isLike = data.UserLike.length > 0 ? true : false;
-                delete data.UserLike;
-                return data;
-            });
-
-
+        if (!posts || posts.length === 0) {
             return {
                 data: {
-                    isNextPage,
-                    post: formattedPosts
+                    isNextPage: false,
+                    post: []
                 }
             };
-
-        } catch (err) {
-            console.error("Error fetching posts:", err);
-            return res.status(500).json({
-                status: false,
-                message: "Something went wrong while fetching posts."
-            });
         }
+
+        if (posts.length > limit) {
+            isNextPage = true;
+            posts.pop();
+        }
+
+        const formattedPosts = posts.map(post => {
+            const data = post.toJSON();
+            data.likeCount = Number(data.likeCount || 0);
+            data.commentCount = Number(data.commentCount || 0);
+            data.isLike = data.UserLike.length > 0 ? true : false;
+            delete data.UserLike;
+            return data;
+        });
+
+
+        return {
+            data: {
+                isNextPage,
+                post: formattedPosts
+            }
+        };
     },
 
     async postLikeUnlike(req, res, next) {

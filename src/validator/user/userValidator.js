@@ -7,12 +7,14 @@ const UserValidator = {
             email: Joi.string().email().required(),
             password: Joi.string(),
             loginType: Joi.string().required(),
+            socialId: Joi.string(),
             username: Joi.string().required(),
             address1: Joi.string().required(),
             address2: Joi.string().required(),
             state: Joi.string().required(),
             city: Joi.string().required(),
-            postalCode: Joi.string().required()
+            postalCode: Joi.string().required(),
+            profilePicture: Joi.string()
         }),
     },
 

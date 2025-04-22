@@ -21,4 +21,7 @@ router.post('/user/auth/reset-password', validate(dataValidator.userValidator.us
 // Policy APIs
 router.get('/policy/get-policy-by-type', APIController.policyController.getPolicy);
 
+//Order APIs
+router.get('/orders/details/:orderId', APIController.orderController.orderDetails);
+
 module.exports = router;

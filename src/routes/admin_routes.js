@@ -39,4 +39,7 @@ router.delete('/product/:id', adminModuleController.productController.delete);
 router.get('/product/get-product', adminModuleController.productController.getOne);
 router.get('/product/get-all-product', adminModuleController.productController.getAll);
 
+// order APIs
+router.get('/orders/all-orders', adminModuleController.orderController.getAllOrders);
+router.post('/orders/update-status', adminModuleController.orderController.updateOrderStatus)
 module.exports = router;

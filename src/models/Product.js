@@ -17,6 +17,14 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false,
                 defaultValue: 0.00
             },
+            isPin: {
+                type: DataTypes.BOOLEAN,
+                defaultValue: false,
+            },
+            isDeleted: {
+                type: DataTypes.BOOLEAN,
+                defaultValue: false,
+            },
             createdAt: {
                 type: DataTypes.DATE,
                 defaultValue: DataTypes.NOW,
@@ -36,6 +44,7 @@ module.exports = (sequelize, DataTypes) => {
         // associations can be defined here
         Product.hasMany(models.ProductVariant, { foreignKey: 'productId', as: 'variants' });
         Product.hasMany(models.ProductImage, { foreignKey: 'productId', as: 'images' });
+        Product.hasMany(models.OrderItem, { foreignKey: 'productId' });
     };
 
     return Product;
