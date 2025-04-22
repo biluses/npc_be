@@ -22,9 +22,9 @@ module.exports = (sequelize, DataTypes) => {
             loginType: {
                 type: DataTypes.STRING,
                 defaultValue: "email",
-				validate: {
-					isIn: [["email", "apple", "google"]],
-				},
+                validate: {
+                    isIn: [["email", "apple", "google"]],
+                },
             },
             googleId: {
                 type: DataTypes.STRING,
@@ -101,6 +101,8 @@ module.exports = (sequelize, DataTypes) => {
     User.associate = function (models) {
         // associations can be defined here
         User.hasMany(models.Cart, { foreignKey: 'userId', as: 'cartItems' });
+        User.hasMany(models.Order, { foreignKey: 'userId' });
+        User.hasMany(models.OrderItem, { foreignKey: 'userId' });
     };
 
     return User;

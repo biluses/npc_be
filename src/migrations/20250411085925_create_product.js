@@ -7,6 +7,8 @@ exports.up = function (knex) {
         table.string('name').notNullable();
         table.text('description');
         table.decimal('price', 10, 2).notNullable().defaultTo(0.00);
+        table.boolean("isPin").defaultTo(false).index();
+        table.boolean("isDeleted").defaultTo(false).index();
         table.timestamp("createdAt").defaultTo(currentUtcTime.format('YYYY-MM-DD HH:mm:ss'));
         table.timestamp("updatedAt").defaultTo(currentUtcTime.format('YYYY-MM-DD HH:mm:ss'));
     }).then(() =>

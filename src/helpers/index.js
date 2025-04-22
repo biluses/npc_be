@@ -1,5 +1,5 @@
 import { getReasonPhrase } from "http-status-codes";
-import { User, Admin } from "../models"
+import { User, Admin, Order } from "../models"
 const { uuid } = require("unique-string-generator");
 const nodemailer = require("nodemailer");
 const fs = require("fs");
@@ -142,4 +142,21 @@ export const buildCommentTree = function (comments, parentId = null) {
             commentTree.push(comment);
         });
     return commentTree;
+}
+
+export const generateOrderNo = async function (comments, parentId = null) {
+    const prefix = "ZERONPC-";
+
+    const lastOrder = await Order.findOne({
+        order: [['createdAt', 'DESC']],
+        attributes: ['orderNo']
+    });
+
+    let newNumber = 1;
+    if (lastOrder && lastOrder.orderNo) {
+        const lastNumber = parseInt(lastOrder.orderNo.replace(prefix, ''));
+        if (!isNaN(lastNumber)) newNumber = lastNumber + 1;
+    }
+
+    return `${prefix}${newNumber}`;
 }

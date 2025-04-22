@@ -2,9 +2,9 @@ import { Product, ProductVariant, ProductImage, Color, Size } from '../../models
 
 const ProductServices = {
     async create(req, res, next) {
-        const { name, description, price, variants } = req.body;
+        const { name, description, price, variants, isPin } = req.body;
 
-        const newProduct = await Product.create({ name, description, price })
+        const newProduct = await Product.create({ name, description, price, isPin })
 
         for (const variant of variants) {
             const { colorId, sizes, images } = variant;
@@ -164,14 +164,16 @@ const ProductServices = {
             throw new Error("Product not found");
         }
 
-        await product.destroy();
+        await product.update({ isDeleted: true });
+        //await product.destroy();
         return true;
     },
 
     async getProductDetail(req, res, next) {
         const { id } = req.query;
 
-        const product = await Product.findByPk(id, {
+        const product = await Product.findOne({
+            where: { id, isDeleted: false },
             include: [
                 {
                     model: ProductVariant,
@@ -233,6 +235,7 @@ const ProductServices = {
         let isNextPage = false;
 
         const { count, rows: products } = await Product.findAndCountAll({
+            where: { isDeleted: false },
             limit,
             offset,
             order: [['createdAt', 'DESC']],
@@ -280,6 +283,7 @@ const ProductServices = {
                     };
                 }
                 groupedVariants[colorId].sizes.push({
+                    variantId: v.id,
                     sizeId: v.sizeId,
                     size: v.Size,
                     quantity: v.quantity

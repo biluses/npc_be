@@ -34,4 +34,8 @@ router.patch('/cart/update-cart-item/:cartId', APIController.cartController.upda
 router.delete('/cart/delete-cart-item/:cartId', APIController.cartController.delete);
 router.get('/cart/get-all-cart-item', APIController.cartController.cartList);
 
+// Order APIs
+router.post('/orders/checkout', APIController.orderController.createOrder);
+router.get('/orders', APIController.orderController.getAllUserOrders);
+
 module.exports = router;
