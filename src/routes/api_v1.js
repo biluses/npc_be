@@ -12,6 +12,10 @@ const APIController = require("../../src/controllers/api/v1")
 router.get('/user/get-profile', APIController.userController.getProfileDetails);
 router.get('/user/get-user-list', APIController.userController.getAllUsers);
 
+// Products APIs
+router.get('/product/get-product-details', APIController.productController.getProductDetails);
+router.get('/product/product-list', APIController.productController.getAllProducts);
+
 // Post APIs
 router.post('/post/create-post', APIController.postController.create);
 router.patch('/post/update-post/:id', APIController.postController.update);
