@@ -1,4 +1,5 @@
 import { Product, ProductVariant, ProductImage, Color, Size } from '../../models'
+const { Op } = require("sequelize");
 
 const ProductServices = {
     async create(req, res, next) {
