@@ -234,11 +234,25 @@ const ProductServices = {
         let offset = (page - 1) * limit;
         let isNextPage = false;
 
+        const search = req.query.search || '';
+        const sortBy = req.query.sortBy || 'createdAt';
+        const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC';
+
+        const where = {
+            isDeleted: false
+        };
+
+        if (search) {
+            where.name = {
+                [Op.like]: `%${search}%`
+            };
+        }
+
         const { count, rows: products } = await Product.findAndCountAll({
-            where: { isDeleted: false },
+            where,
             limit,
             offset,
-            order: [['createdAt', 'DESC']],
+            order: [[sortBy, sortOrder]],
             include: [
                 {
                     model: ProductVariant,
@@ -258,6 +272,8 @@ const ProductServices = {
         if (products.length === 0) {
             return {
                 data: {
+                    totalCount: count,
+                    currentPage: page,
                     isNextPage: isNextPage,
                     products: []
                 }
@@ -308,6 +324,8 @@ const ProductServices = {
 
         return {
             data: {
+                totalCount: count,
+                currentPage: page,
                 isNextPage: isNextPage,
                 products: formatted
             }
