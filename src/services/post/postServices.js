@@ -178,8 +178,10 @@ const PostServices = {
         }
 
         if (posts.length > limit) {
-            isNextPage = true;
-            posts.pop();
+            if (posts[limit]) {
+                isNextPage = true;
+                posts.pop();
+            }
         }
 
         const formattedPosts = posts.map(post => {

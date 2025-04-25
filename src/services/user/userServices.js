@@ -230,8 +230,10 @@ const UserServices = {
         }
 
         if (users.length > limit) {
-            isNextPage = true;
-            users.pop();
+            if (users[limit]) {
+                isNextPage = true;
+                users.pop();
+            }
         }
 
         return { users };

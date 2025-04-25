@@ -251,8 +251,9 @@ const ProductServices = {
 
         const { count, rows: products } = await Product.findAndCountAll({
             where,
-            limit,
+            limit: limit + 1,
             offset,
+            distinct: true,
             order: [[sortBy, sortOrder]],
             include: [
                 {
@@ -281,9 +282,11 @@ const ProductServices = {
             };
         }
 
-        if (products.length > limit) {
-            isNextPage = true;
-            products.pop(); // remove the extra one
+        if (count > limit) {
+            if (products[limit]) {
+                isNextPage = true;
+                products.pop(); // remove the extra one
+            }
         }
 
         const formatted = products.map(product => {
