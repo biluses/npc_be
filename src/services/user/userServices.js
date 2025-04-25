@@ -1,14 +1,26 @@
 import { User } from "../../models";
-import { generateSecretId } from "../../helpers"
+import { generateSecretId, sendMail } from "../../helpers"
 const { verifyPassword, hashPassword } = require("../../utils/passwordBcrypt");
 const { issueAccessToken } = require("../../utils/jwtToken");
 const { UniqueOTP } = require("unique-string-generator");
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
 const path = require("path");
 const ejs = require('ejs');
 
 
 const UserServices = {
+    async emailCheck(req, res, next) {
+        const { email } = req.body;
+
+        let user = await User.findOne({
+            where: { email, isDeleted: false }
+        });
+
+        return {
+            data: { isUnique: user ? false : true }
+        };
+    },
+
     async register(req, res, next) {
         const { email, password, loginType, socialId, username, profilePicture, address1, address2, city, state, postalCode } = req.body;
 
@@ -28,6 +40,7 @@ const UserServices = {
             throw new Error("Password is required");
         }
 
+        let verificationToken = UniqueOTP(6)
         let userObj = {
             secretId: await generateSecretId(false),
             email,
@@ -40,7 +53,8 @@ const UserServices = {
             city,
             state,
             postalCode,
-            isCompletedRegister: true
+            isCompletedRegister: false,
+            verificationToken
         }
 
         if (loginType === 'google') {
@@ -49,7 +63,53 @@ const UserServices = {
             userObj.appleId = socialId;
         }
 
-        const newUser = await User.create(userObj);
+        let newUser = await User.create(userObj);
+
+        //send mail for otp
+        const templatePath = path.join(__dirname, '../../../views/emails', 'send-otp-email.ejs');
+        const mail_html = await ejs.renderFile(templatePath, { otp: verificationToken, name: username });
+        sendMail(email, "Verify account OTP for ZERO NPC Account", mail_html);
+
+        // const newUser = await User.create(userObj);
+        // delete newUser.dataValues.password;
+
+        // let token = issueAccessToken({
+        //     secretId: newUser.secretId,
+        //     loginType: "user",
+        // });
+
+        return {
+            // data: { user: newUser, token }
+            data: { secretId: newUser.secretId }
+        };
+    },
+
+    async verifyAccountOtp(req, res, next) {
+        const { secretId, verificationToken } = req.body;
+
+        let user = await User.findOne({
+            where: { secretId, isDeleted: false }
+        });
+
+        if (!user) {
+            throw new Error("Invalid secretId");
+        }
+
+        if (verificationToken != user.verificationToken) {
+            throw new Error("Invalid OTP");
+        }
+
+        await User.update({ verificationToken: null, isCompletedRegister: true }, {
+            where: {
+                id: user.id
+            }
+        });
+
+        let newUser = await User.findOne({
+            where: {
+                id: user.id
+            }
+        })
         delete newUser.dataValues.password;
 
         let token = issueAccessToken({
@@ -59,7 +119,7 @@ const UserServices = {
 
         return {
             data: { user: newUser, token }
-        };
+        }
     },
 
     async login(req, res, next) {
@@ -70,6 +130,10 @@ const UserServices = {
 
         if (!user) {
             throw new Error("Incorrect Email Id");
+        }
+
+        if (!user.isCompletedRegister) {
+            throw new Error("Your account is not verify");
         }
 
         const isMatch = await verifyPassword(password, user.password);
@@ -90,7 +154,7 @@ const UserServices = {
     },
 
     async forgotPassword(req, res, next) {
-        const { email } = req.body;
+        const { email, isAccountResend = false } = req.body;
 
         let user = await User.findOne({
             where: { email, isDeleted: false }
@@ -102,14 +166,21 @@ const UserServices = {
         let forgotCode = await codeGenerate();
         async function codeGenerate() {
             let generatedCode = UniqueOTP(6);
-            var forgotCodeCheck = await User.findOne({ where: { forgotCode: generatedCode } })
+            let where = {}
+            console.log('isAccountResend', isAccountResend)
+            if (isAccountResend) {
+                where.verificationToken = generatedCode
+            } else {
+                where.forgotCode = generatedCode
+            }
+            var forgotCodeCheck = await User.findOne({ where: where })
             if (forgotCodeCheck) {
                 codeGenerate();
             } else {
-                let payload = {
-                    forgotCode: generatedCode
-                }
-                await User.update(payload, {
+                // let payload = {
+                //     forgotCode: generatedCode
+                // }
+                await User.update(where, {
                     where: {
                         id: user.id
                     }
@@ -119,17 +190,17 @@ const UserServices = {
         }
 
         //send mail for otp
-        // const templatePath = path.join(__dirname, '../../../../views/emails', 'send-otp-email.ejs');
-        // const mail_html = await ejs.renderFile(templatePath, { otp: forgotCode, name: user.username });
-        // send_mail(user.email, "Reset Password OTP for ZERO NPC Account", mail_html);
+        const templatePath = path.join(__dirname, '../../../views/emails', 'send-otp-email.ejs');
+        const mail_html = await ejs.renderFile(templatePath, { otp: forgotCode, name: user.username });
+        sendMail(user.email, isAccountResend ? "Account verify otp for ZERO NPC Account" : "Reset Password OTP for ZERO NPC Account", mail_html);
 
         return {
-            data: { secretId: user.secretId }
+            data: { secretId: user.secretId, isAccountResend }
         }
     },
 
     async verifyOtp(req, res, next) {
-        const { forgotCode, secretId } = req.body;
+        const { forgotCode, secretId, newPassword } = req.body;
 
         let user = await User.findOne({
             where: { secretId, isDeleted: false }
@@ -143,7 +214,12 @@ const UserServices = {
             throw new Error("Invalid OTP");
         }
 
-        await User.update({ forgotCode: null }, {
+        let payload = {
+            password: await hashPassword(newPassword),
+            forgotCode: null
+        }
+
+        await User.update(payload, {
             where: {
                 id: user.id
             }

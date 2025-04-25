@@ -1,11 +1,31 @@
 const UserServices = require('../../../services/user/userServices');
 
 const userController = {
+    // User email check(public API)
+    emailCheck: async (req, res, next) => {
+        try {
+            const userEmailResponse = await UserServices.emailCheck(req, res, next);
+            return generateResponse(req, res, StatusCodes.OK, true, "Email check successfully !", userEmailResponse);
+        } catch (error) {
+            return generateResponse(req, res, StatusCodes.INTERNAL_SERVER_ERROR, false, error.message || "Something went wrong!");
+        }
+    },
+
     // User register(public API)
     register: async (req, res, next) => {
         try {
             const userRegisterResponse = await UserServices.register(req, res, next);
             return generateResponse(req, res, StatusCodes.OK, true, "Register successfully !", userRegisterResponse);
+        } catch (error) {
+            return generateResponse(req, res, StatusCodes.INTERNAL_SERVER_ERROR, false, error.message || "Something went wrong!");
+        }
+    },
+
+    // User account verify(public API)
+    verifyAccountOtp: async (req, res, next) => {
+        try {
+            const userVerifyOtpResponse = await UserServices.verifyAccountOtp(req, res, next);
+            return generateResponse(req, res, StatusCodes.OK, true, "Account verify successfully !", userVerifyOtpResponse);
         } catch (error) {
             return generateResponse(req, res, StatusCodes.INTERNAL_SERVER_ERROR, false, error.message || "Something went wrong!");
         }
@@ -25,7 +45,7 @@ const userController = {
     forgotPassword: async (req, res, next) => {
         try {
             const userForgotCodeResponse = await UserServices.forgotPassword(req, res, next);
-            return generateResponse(req, res, StatusCodes.OK, true, "Forgot password code send successfully !", userForgotCodeResponse);
+            return generateResponse(req, res, StatusCodes.OK, true, userForgotCodeResponse.isAccountResend == "true" || true ? "Account verify code send successfully !" : "Forgot password code send successfully !", userForgotCodeResponse);
         } catch (error) {
             return generateResponse(req, res, StatusCodes.INTERNAL_SERVER_ERROR, false, error.message || "Something went wrong!");
         }
@@ -35,7 +55,7 @@ const userController = {
     verifyOtp: async (req, res, next) => {
         try {
             const userVerifyOtpResponse = await UserServices.verifyOtp(req, res, next);
-            return generateResponse(req, res, StatusCodes.OK, true, "Forgot code verify successfully !", userVerifyOtpResponse);
+            return generateResponse(req, res, StatusCodes.OK, true, "password change successfully !", userVerifyOtpResponse);
         } catch (error) {
             return generateResponse(req, res, StatusCodes.INTERNAL_SERVER_ERROR, false, error.message || "Something went wrong!");
         }

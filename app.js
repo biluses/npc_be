@@ -15,7 +15,7 @@ import {
     generateResponse,
     upload_file,
     delete_file,
-    send_mail
+    sendMail
 } from "./src/helpers"
 
 import publicApiRoutesV1 from './src/routes/public_api_v1';
@@ -28,7 +28,7 @@ global.StatusCodes = StatusCodes
 global.generateResponse = generateResponse
 global.upload_file = upload_file
 global.delete_file = delete_file
-global.sendMail = send_mail
+global.sendMail = sendMail
 
 const app = express();
 
