@@ -1,6 +1,6 @@
-import { Order, OrderItem, Cart, ProductVariant, Color, Size, Product } from "../../models";
-
-import { generateOrderNo } from "../../helpers" 
+import { Order, OrderItem, Cart, ProductVariant, Color, Size, Product, User } from "../../models";
+const { Op } = require("sequelize");
+import { generateOrderNo } from "../../helpers"
 
 const OrderServices = {
     async createOrder(req, res, next) {
@@ -58,23 +58,56 @@ const OrderServices = {
 
     async getAllUserOrders(req, res, next) {
         const userId = req.loggedInUser.id;
-        const orders = await Order.findAll({
-            where: { userId },
-            order: [['createdAt', 'DESC']],
+
+        const page = req.query.page ? parseInt(req.query.page) : 1;
+        const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+        const offset = (page - 1) * limit;
+
+        const search = req.query.search || '';
+        const sortBy = req.query.sortBy || 'createdAt';
+        const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC';
+
+        const where = { userId };
+
+        // Advanced search across relations
+        if (search) {
+            where[Op.or] = [
+                { orderNo: { [Op.like]: `%${search}%` } },
+                { '$items.Product.name$': { [Op.like]: `%${search}%` } },
+                { '$items.User.username$': { [Op.like]: `%${search}%` } },
+                { '$items.User.email$': { [Op.like]: `%${search}%` } }
+            ];
+        }
+
+        const { count, rows: orders } = await Order.findAndCountAll({
+            where,
+            limit: limit + 1,
+            offset,
+            distinct: true,
+            subQuery: false, // necessary for correct nested search
+            order: [[sortBy, sortOrder]],
             include: [
                 {
                     model: OrderItem,
                     as: 'items',
+                    required: false,
                     include: [
                         {
+                            model: User,
+                            attributes: ['id', 'username', 'email', 'profilePicture'],
+                            required: false
+                        },
+                        {
                             model: Product,
-                            attributes: ['id', 'name', 'price']
+                            attributes: ['id', 'name', 'price'],
+                            required: false
                         },
                         {
                             model: ProductVariant,
+                            required: false,
                             include: [
-                                { model: Color, attributes: ['id', 'name'] },
-                                { model: Size, attributes: ['id', 'name'] }
+                                { model: Color, attributes: ['id', 'name'], required: false },
+                                { model: Size, attributes: ['id', 'name'], required: false }
                             ]
                         }
                     ]
@@ -82,8 +115,16 @@ const OrderServices = {
             ]
         });
 
+        const isNextPage = orders.length > limit;
+        if (isNextPage) orders.pop(); // remove the extra one
+
         return {
-            data: { orders }
+            data: {
+                totalCount: count,
+                currentPage: page,
+                isNextPage,
+                orders
+            }
         };
     },
 
@@ -122,31 +163,73 @@ const OrderServices = {
     },
 
     async getAllOrders(req, res, next) {
-        const orders = await Order.findAll({
-            order: [['createdAt', 'DESC']],
-            include: [
-                {
-                    model: OrderItem,
-                    as: 'items',
-                    include: [
-                        {
-                            model: Product,
-                            attributes: ['id', 'name', 'price']
-                        },
-                        {
-                            model: ProductVariant,
-                            include: [
-                                { model: Color, attributes: ['id', 'name'] },
-                                { model: Size, attributes: ['id', 'name'] }
-                            ]
-                        }
-                    ]
-                }
-            ]
+        const page = req.query.page ? parseInt(req.query.page) : 1;
+        const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+        const offset = (page - 1) * limit;
+
+        const search = req.query.search || '';
+        const sortBy = req.query.sortBy || 'createdAt';
+        const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC';
+
+        const where = {};
+
+        const include = [
+            {
+                model: User,
+                attributes: ['id', 'username', 'email', 'profilePicture'],
+                required: false // important: allows LEFT JOIN so search doesn't break
+            },
+            {
+                model: OrderItem,
+                as: 'items',
+                required: false,
+                include: [
+                    {
+                        model: Product,
+                        attributes: ['id', 'name', 'price'],
+                        required: false
+                    },
+                    {
+                        model: ProductVariant,
+                        required: false,
+                        include: [
+                            { model: Color, attributes: ['id', 'name'], required: false },
+                            { model: Size, attributes: ['id', 'name'], required: false }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        if (search) {
+            where[Op.or] = [
+                { orderNo: { [Op.like]: `%${search}%` } },
+                { '$User.username$': { [Op.like]: `%${search}%` } },
+                { '$User.email$': { [Op.like]: `%${search}%` } },
+                { '$items.Product.name$': { [Op.like]: `%${search}%` } }
+            ];
+        }
+
+        const { count, rows: orders } = await Order.findAndCountAll({
+            where,
+            include,
+            subQuery: false, // crucial to avoid subquery wrapping the FROM clause
+            limit: limit + 1,
+            offset,
+            distinct: true,
+            order: [[sortBy, sortOrder]]
         });
 
+        const isNextPage = orders.length > limit;
+        if (isNextPage) orders.pop(); // remove extra one
+
         return {
-            data: { orders }
+            data: {
+                totalCount: count,
+                currentPage: page,
+                isNextPage,
+                orders
+            }
         };
     },
 
