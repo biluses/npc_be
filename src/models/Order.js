@@ -14,6 +14,9 @@ module.exports = (sequelize, DataTypes) => {
             },
             status: {
                 type: DataTypes.INTEGER,
+                validate: {
+                    isIn: [[1, 2, 3]],
+                },
                 defaultValue: 1 //1= pending
             },
             userId: {
