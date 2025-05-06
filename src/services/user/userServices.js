@@ -158,10 +158,10 @@ const UserServices = {
             }
 
             let updateSocialMediaIdData = {}
-            if (inputs.loginType === 'google') {
-				updateSocialMediaIdData.googleToken = inputs.socialId;
-			} else if (inputs.loginType === 'apple') {
-				updateSocialMediaIdData.appleToken = inputs.socialId;
+            if (loginType === 'google') {
+				updateSocialMediaIdData.googleToken = socialId;
+			} else if (loginType === 'apple') {
+				updateSocialMediaIdData.appleToken = socialId;
 			}
 
             await User.update(updateSocialMediaIdData, {
