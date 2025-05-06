@@ -130,7 +130,7 @@ const UserServices = {
     },
 
     async login(req, res, next) {
-        const { email, password } = req.body;
+        const { email, password, loginType, socialId } = req.body;
         let user = await User.findOne({
             where: { email, isDeleted: false }
         });
@@ -143,9 +143,32 @@ const UserServices = {
             throw new Error("Your account is not verify");
         }
 
-        const isMatch = await verifyPassword(password, user.password);
-        if (!isMatch) {
-            throw new Error("Incorrect Password");
+        if (loginType == "email") {
+            if(!password) {
+                throw new Error("Password is required");
+            }
+
+            const isMatch = await verifyPassword(password, user.password);
+            if (!isMatch) {
+                throw new Error("Incorrect Password");
+            }
+        } else if (loginType === 'facebook' || loginType === 'apple' || loginType === 'google') {
+            if(!socialId) {
+                throw new Error("socialId is required");
+            }
+
+            let updateSocialMediaIdData = {}
+            if (inputs.loginType === 'google') {
+				updateSocialMediaIdData.googleToken = inputs.socialId;
+			} else if (inputs.loginType === 'apple') {
+				updateSocialMediaIdData.appleToken = inputs.socialId;
+			}
+
+            await User.update(updateSocialMediaIdData, {
+                where: {
+                    id: user.id
+                }
+            });
         }
 
         let token = issueAccessToken({
