@@ -1,5 +1,5 @@
-import { Order, OrderItem, Cart, ProductVariant, Color, Size, Product, User } from "../../models";
-const { Op } = require("sequelize");
+import { Order, OrderItem, Cart, ProductVariant, Color, Size, Product, User, sequelize } from "../../models";
+const { Op, Sequelize } = require("sequelize");
 import { generateOrderNo } from "../../helpers"
 
 const OrderServices = {
@@ -56,9 +56,80 @@ const OrderServices = {
         };
     },
 
+    // async getAllUserOrders(req, res, next) {
+    //     const userId = req.loggedInUser.id;
+
+    //     const page = req.query.page ? parseInt(req.query.page) : 1;
+    //     const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+    //     const offset = (page - 1) * limit;
+
+    //     const search = req.query.search || '';
+    //     const sortBy = req.query.sortBy || 'createdAt';
+    //     const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC';
+
+    //     const where = { userId };
+
+    //     // Advanced search across relations
+    //     if (search) {
+    //         where[Op.or] = [
+    //             { orderNo: { [Op.like]: `%${search}%` } },
+    //             { '$items.Product.name$': { [Op.like]: `%${search}%` } },
+    //             { '$items.User.username$': { [Op.like]: `%${search}%` } },
+    //             { '$items.User.email$': { [Op.like]: `%${search}%` } }
+    //         ];
+    //     }
+
+    //     const { count, rows: orders } = await Order.findAndCountAll({
+    //         where,
+    //         limit: limit + 1,
+    //         offset,
+    //         distinct: true,
+    //         subQuery: false, // necessary for correct nested search
+    //         order: [[sortBy, sortOrder]],
+    //         include: [
+    //             {
+    //                 model: OrderItem,
+    //                 as: 'items',
+    //                 required: false,
+    //                 include: [
+    //                     {
+    //                         model: User,
+    //                         attributes: ['id', 'username', 'email', 'profilePicture'],
+    //                         required: false
+    //                     },
+    //                     {
+    //                         model: Product,
+    //                         attributes: ['id', 'name', 'price'],
+    //                         required: false
+    //                     },
+    //                     {
+    //                         model: ProductVariant,
+    //                         required: false,
+    //                         include: [
+    //                             { model: Color, attributes: ['id', 'name'], required: false },
+    //                             { model: Size, attributes: ['id', 'name'], required: false }
+    //                         ]
+    //                     }
+    //                 ]
+    //             }
+    //         ]
+    //     });
+
+    //     const isNextPage = orders.length > limit;
+    //     if (isNextPage) orders.pop(); // remove the extra one
+
+    //     return {
+    //         data: {
+    //             totalCount: count,
+    //             currentPage: page,
+    //             isNextPage,
+    //             orders
+    //         }
+    //     };
+    // },
+
     async getAllUserOrders(req, res, next) {
         const userId = req.loggedInUser.id;
-
         const page = req.query.page ? parseInt(req.query.page) : 1;
         const limit = req.query.limit ? parseInt(req.query.limit) : 10;
         const offset = (page - 1) * limit;
@@ -67,56 +138,80 @@ const OrderServices = {
         const sortBy = req.query.sortBy || 'createdAt';
         const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC';
 
-        const where = { userId };
+        let where = { userId };
 
-        // Advanced search across relations
+        // STEP 1: Search product name and get matching order IDs
+        let orderIds = [];
         if (search) {
-            where[Op.or] = [
-                { orderNo: { [Op.like]: `%${search}%` } },
-                { '$items.Product.name$': { [Op.like]: `%${search}%` } },
-                { '$items.User.username$': { [Op.like]: `%${search}%` } },
-                { '$items.User.email$': { [Op.like]: `%${search}%` } }
-            ];
+            const matchingItems = await OrderItem.findAll({
+                attributes: ['orderId'],
+                include: [
+                    {
+                        model: Product,
+                        attributes: [],
+                        where: {
+                            name: { [Op.like]: `%${search}%` }
+                        }
+                    }
+                ],
+                raw: true
+            });
+
+            orderIds = [...new Set(matchingItems.map(item => item.orderId))];
+            if (orderIds.length === 0) {
+                return {
+                    data: {
+                        totalCount: 0,
+                        currentPage: page,
+                        isNextPage: false,
+                        orders: []
+                    }
+                };
+            }
+
+            where.id = { [Op.in]: orderIds };
         }
 
+        const status = req.query.status;
+        if (status) {
+            where.status = status;
+        }
+
+        // STEP 2: Fetch full orders with ALL items
         const { count, rows: orders } = await Order.findAndCountAll({
             where,
-            limit: limit + 1,
-            offset,
-            distinct: true,
-            subQuery: false, // necessary for correct nested search
-            order: [[sortBy, sortOrder]],
             include: [
+                {
+                    model: User,
+                    attributes: ['id', 'username', 'email', 'profilePicture']
+                },
                 {
                     model: OrderItem,
                     as: 'items',
-                    required: false,
                     include: [
                         {
-                            model: User,
-                            attributes: ['id', 'username', 'email', 'profilePicture'],
-                            required: false
-                        },
-                        {
                             model: Product,
-                            attributes: ['id', 'name', 'price'],
-                            required: false
+                            attributes: ['id', 'name', 'price']
                         },
                         {
                             model: ProductVariant,
-                            required: false,
                             include: [
-                                { model: Color, attributes: ['id', 'name'], required: false },
-                                { model: Size, attributes: ['id', 'name'], required: false }
+                                { model: Color, attributes: ['id', 'name'] },
+                                { model: Size, attributes: ['id', 'name'] }
                             ]
                         }
                     ]
                 }
-            ]
+            ],
+            distinct: true,
+            subQuery: false,
+            limit: limit + 1,
+            offset,
+            order: [[sortBy, sortOrder]]
         });
 
         const isNextPage = orders.length > limit;
-        if (isNextPage) orders.pop(); // remove the extra one
+        if (isNextPage) orders.pop();
 
         return {
             data: {
@@ -127,6 +222,7 @@ const OrderServices = {
             }
         };
     },
+
 
     async orderDetails(req, res, next) {
         const orderId = req.params.orderId;
@@ -162,76 +258,76 @@ const OrderServices = {
         };
     },
 
-    async getAllOrders(req, res, next) {
-        const page = req.query.page ? parseInt(req.query.page) : 1;
-        const limit = req.query.limit ? parseInt(req.query.limit) : 10;
-        const offset = (page - 1) * limit;
+    // async getAllOrders(req, res, next) {
+    //     const page = req.query.page ? parseInt(req.query.page) : 1;
+    //     const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+    //     const offset = (page - 1) * limit;
 
-        const search = req.query.search || '';
-        const sortBy = req.query.sortBy || 'createdAt';
-        const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC';
+    //     const search = req.query.search || '';
+    //     const sortBy = req.query.sortBy || 'createdAt';
+    //     const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC';
 
-        const where = {};
+    //     const where = {};
 
-        const include = [
-            {
-                model: User,
-                attributes: ['id', 'username', 'email', 'profilePicture'],
-                required: false // important: allows LEFT JOIN so search doesn't break
-            },
-            {
-                model: OrderItem,
-                as: 'items',
-                required: false,
-                include: [
-                    {
-                        model: Product,
-                        attributes: ['id', 'name', 'price'],
-                        required: false
-                    },
-                    {
-                        model: ProductVariant,
-                        required: false,
-                        include: [
-                            { model: Color, attributes: ['id', 'name'], required: false },
-                            { model: Size, attributes: ['id', 'name'], required: false }
-                        ]
-                    }
-                ]
-            }
-        ];
+    //     const include = [
+    //         {
+    //             model: User,
+    //             attributes: ['id', 'username', 'email', 'profilePicture'],
+    //             required: false // important: allows LEFT JOIN so search doesn't break
+    //         },
+    //         {
+    //             model: OrderItem,
+    //             as: 'items',
+    //             required: false,
+    //             include: [
+    //                 {
+    //                     model: Product,
+    //                     attributes: ['id', 'name', 'price'],
+    //                     required: false
+    //                 },
+    //                 {
+    //                     model: ProductVariant,
+    //                     required: false,
+    //                     include: [
+    //                         { model: Color, attributes: ['id', 'name'], required: false },
+    //                         { model: Size, attributes: ['id', 'name'], required: false }
+    //                     ]
+    //                 }
+    //             ]
+    //         }
+    //     ];
 
-        if (search) {
-            where[Op.or] = [
-                { orderNo: { [Op.like]: `%${search}%` } },
-                { '$User.username$': { [Op.like]: `%${search}%` } },
-                { '$User.email$': { [Op.like]: `%${search}%` } },
-                { '$items.Product.name$': { [Op.like]: `%${search}%` } }
-            ];
-        }
+    //     if (search) {
+    //         where[Op.or] = [
+    //             { orderNo: { [Op.like]: `%${search}%` } },
+    //             { '$User.username$': { [Op.like]: `%${search}%` } },
+    //             { '$User.email$': { [Op.like]: `%${search}%` } },
+    //             { '$items.Product.name$': { [Op.like]: `%${search}%` } }
+    //         ];
+    //     }
 
-        const { count, rows: orders } = await Order.findAndCountAll({
-            where,
-            include,
-            subQuery: false, // crucial to avoid subquery wrapping the FROM clause
-            limit: limit + 1,
-            offset,
-            distinct: true,
-            order: [[sortBy, sortOrder]]
-        });
+    //     const { count, rows: orders } = await Order.findAndCountAll({
+    //         where,
+    //         include,
+    //         subQuery: false, // crucial to avoid subquery wrapping the FROM clause
+    //         limit: limit + 1,
+    //         offset,
+    //         distinct: true,
+    //         order: [[sortBy, sortOrder]]
+    //     });
 
-        const isNextPage = orders.length > limit;
-        if (isNextPage) orders.pop(); // remove extra one
+    //     const isNextPage = orders.length > limit;
+    //     if (isNextPage) orders.pop(); // remove extra one
 
-        return {
-            data: {
-                totalCount: count,
-                currentPage: page,
-                isNextPage,
-                orders
-            }
-        };
-    },
+    //     return {
+    //         data: {
+    //             totalCount: count,
+    //             currentPage: page,
+    //             isNextPage,
+    //             orders
+    //         }
+    //     };
+    // },
 
     async updateOrderStatus(req, res, next) {
         const { orderId, status } = req.body;
@@ -255,7 +351,102 @@ const OrderServices = {
         return {
             data: { order },
         };
+    },
+
+    async getAllOrders(req, res, next) {
+        const page = req.query.page ? parseInt(req.query.page) : 1;
+        const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+        const offset = (page - 1) * limit;
+
+        const search = req.query.search || '';
+        const sortBy = req.query.sortBy || 'createdAt';
+        const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC';
+
+        let where = {};
+
+        // STEP 1: Search product name and get matching order IDs
+        let orderIds = [];
+        if (search) {
+            const matchingItems = await OrderItem.findAll({
+                attributes: ['orderId'],
+                include: [
+                    {
+                        model: Product,
+                        attributes: [],
+                        where: {
+                            name: { [Op.like]: `%${search}%` }
+                        }
+                    }
+                ],
+                raw: true
+            });
+
+            orderIds = [...new Set(matchingItems.map(item => item.orderId))];
+            if (orderIds.length === 0) {
+                return {
+                    data: {
+                        totalCount: 0,
+                        currentPage: page,
+                        isNextPage: false,
+                        orders: []
+                    }
+                };
+            }
+
+            where.id = { [Op.in]: orderIds };
+        }
+
+        const status = req.query.status;
+        if (status) {
+            where.status = status;
+        }
+
+        // STEP 2: Fetch full orders with ALL items
+        const { count, rows: orders } = await Order.findAndCountAll({
+            where,
+            include: [
+                {
+                    model: User,
+                    attributes: ['id', 'username', 'email', 'profilePicture']
+                },
+                {
+                    model: OrderItem,
+                    as: 'items',
+                    include: [
+                        {
+                            model: Product,
+                            attributes: ['id', 'name', 'price']
+                        },
+                        {
+                            model: ProductVariant,
+                            include: [
+                                { model: Color, attributes: ['id', 'name'] },
+                                { model: Size, attributes: ['id', 'name'] }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            distinct: true,
+            subQuery: false,
+            limit: limit + 1,
+            offset,
+            order: [[sortBy, sortOrder]]
+        });
+
+        const isNextPage = orders.length > limit;
+        if (isNextPage) orders.pop();
+
+        return {
+            data: {
+                totalCount: count,
+                currentPage: page,
+                isNextPage,
+                orders
+            }
+        };
     }
+
 
 }
 
