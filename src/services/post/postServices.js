@@ -1,4 +1,4 @@
-import { Post, PostLike, PostComment } from "../../models";
+import { Post, PostLike, PostComment, User } from "../../models";
 import { buildCommentTree } from "../../helpers"
 const { Op, fn, col, literal } = require("sequelize");
 
