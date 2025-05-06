@@ -163,6 +163,10 @@ const PostServices = {
                     where: { userId: req.loggedInUser.id },
                     attributes: ['id'],
                     required: false
+                },
+                {
+                    model: User,
+                    attributes: ['email', 'profilePicture']
                 }
             ],
             group: ['Post.id', 'UserLike.id']

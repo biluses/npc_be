@@ -44,7 +44,6 @@ const UserServices = {
         let userObj = {
             secretId: await generateSecretId(false),
             email,
-            password: await hashPassword(password),
             loginType,
             username,
             profilePicture,
@@ -53,7 +52,7 @@ const UserServices = {
             city,
             state,
             postalCode,
-            isCompletedRegister: false,
+            isCompletedRegister: loginType == "email" ? false : true,
             verificationToken
         }
 
@@ -61,27 +60,35 @@ const UserServices = {
             userObj.googleId = socialId;
         } else if (loginType === 'apple') {
             userObj.appleId = socialId;
+        } else if (loginType == 'email') {
+            userObj.password = await hashPassword(password)
         }
 
         let newUser = await User.create(userObj);
 
-        //send mail for otp
-        const templatePath = path.join(__dirname, '../../../views/emails', 'send-otp-email.ejs');
-        const mail_html = await ejs.renderFile(templatePath, { otp: verificationToken, name: username });
-        sendMail(email, "Verify account OTP for ZERO NPC Account", mail_html);
+        if (loginType == "email") {
+            //send mail for otp
+            const templatePath = path.join(__dirname, '../../../views/emails', 'send-otp-email.ejs');
+            const mail_html = await ejs.renderFile(templatePath, { otp: verificationToken, name: username });
+            sendMail(email, "Verify account OTP for ZERO NPC Account", mail_html);
+        }
 
-        // const newUser = await User.create(userObj);
-        // delete newUser.dataValues.password;
+        if (loginType == "email") {
+            return {
+                // data: { user: newUser, token }
+                data: { secretId: newUser.secretId }
+            };
+        } else {
+            delete newUser.dataValues.password;
 
-        // let token = issueAccessToken({
-        //     secretId: newUser.secretId,
-        //     loginType: "user",
-        // });
-
-        return {
-            // data: { user: newUser, token }
-            data: { secretId: newUser.secretId }
-        };
+            let token = issueAccessToken({
+                secretId: newUser.secretId,
+                loginType: "user",
+            });
+            return {
+                data: { user: newUser, token }
+            };
+        }
     },
 
     async verifyAccountOtp(req, res, next) {
