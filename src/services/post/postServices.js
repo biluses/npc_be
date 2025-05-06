@@ -166,7 +166,7 @@ const PostServices = {
                 },
                 {
                     model: User,
-                    attributes: ['email', 'profilePicture']
+                    attributes: ['email', 'profilePicture', 'username']
                 }
             ],
             group: ['Post.id', 'UserLike.id']
