@@ -223,7 +223,6 @@ const OrderServices = {
         };
     },
 
-
     async orderDetails(req, res, next) {
         const orderId = req.params.orderId;
         const order = await Order.findOne({
@@ -446,7 +445,6 @@ const OrderServices = {
             }
         };
     }
-
 
 }
 

@@ -99,6 +99,18 @@ const userController = {
         }
     },
 
+    // Update User profile(protected API)
+    updateProfile: async (req, res, next) => {
+        try {
+            const userProfileResponse = await UserServices.updateProfile(req, res, next);
+            return generateResponse(req, res, StatusCodes.OK, true, "Profile updated successfully !", userProfileResponse);
+        } catch (error) {
+            console.log('error', error)
+            return generateResponse(req, res, StatusCodes.INTERNAL_SERVER_ERROR, false, error.message || 'Something went wrong !',
+                { data: {} }
+            );
+        }
+    }
 }
 
 module.exports = userController;

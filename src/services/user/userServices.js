@@ -144,7 +144,7 @@ const UserServices = {
         }
 
         if (loginType == "email") {
-            if(!password) {
+            if (!password) {
                 throw new Error("Password is required");
             }
 
@@ -153,16 +153,16 @@ const UserServices = {
                 throw new Error("Incorrect Password");
             }
         } else if (loginType === 'facebook' || loginType === 'apple' || loginType === 'google') {
-            if(!socialId) {
+            if (!socialId) {
                 throw new Error("socialId is required");
             }
 
             let updateSocialMediaIdData = {}
             if (loginType === 'google') {
-				updateSocialMediaIdData.googleToken = socialId;
-			} else if (loginType === 'apple') {
-				updateSocialMediaIdData.appleToken = socialId;
-			}
+                updateSocialMediaIdData.googleToken = socialId;
+            } else if (loginType === 'apple') {
+                updateSocialMediaIdData.appleToken = socialId;
+            }
 
             await User.update(updateSocialMediaIdData, {
                 where: {
@@ -343,6 +343,40 @@ const UserServices = {
         }
 
         return { users };
+    },
+
+    async updateProfile(req, res, next) {
+        const { username, profilePicture, address1, address2, city, state, postalCode } = req.body;
+        const { secretId } = req.loggedInUser;
+
+        const user = await User.findOne({
+            where: { secretId, isDeleted: false }
+        });
+
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        const updateData = {
+            username,
+            profilePicture,
+            address1,
+            address2,
+            city,
+            state,
+            postalCode
+        };
+
+        await User.update(updateData, {
+            where: { secretId }
+        });
+
+        const updatedUser = await User.findOne({
+            where: { secretId },
+            attributes: { exclude: ['password'] }
+        });
+
+        return { user: updatedUser };
     }
 }
 
