@@ -1,11 +1,11 @@
-import { Product, ProductVariant, ProductImage, Color, Size } from '../../models'
+import { Product, ProductVariant, ProductImage, Color, Size, Category } from '../../models'
 const { Op } = require("sequelize");
 
 const ProductServices = {
     async create(req, res, next) {
-        const { name, description, price, variants, isPin } = req.body;
+        const { name, description, price, variants, isPin, categoryId } = req.body;
 
-        const newProduct = await Product.create({ name, description, price, isPin })
+        const newProduct = await Product.create({ name, description, price, isPin, categoryId })
 
         const variantMap = new Map(); // key: `${colorId}_${sizeId}`, value: quantity
         const imageMap = new Map(); // key: colorId, value: Set of image URLs
@@ -80,12 +80,12 @@ const ProductServices = {
 
     async update(req, res, next) {
         const { id } = req.params;
-        const { name, description, price, variants } = req.body;
+        const { name, description, price, variants, categoryId } = req.body;
 
         const product = await Product.findByPk(id);
         if (!product) throw new Error("Product not found");
 
-        await product.update({ name, description, price });
+        await product.update({ name, description, price, categoryId });
 
         // Get existing variants and images
         const existingVariants = await ProductVariant.findAll({ where: { productId: id } });
@@ -357,6 +357,7 @@ const ProductServices = {
                 name: product.name,
                 description: product.description,
                 price: product.price,
+                category: product.Category,
                 variants: Object.values(groupedVariants)
             }
         };
@@ -371,10 +372,15 @@ const ProductServices = {
         const search = req.query.search || '';
         const sortBy = req.query.sortBy || 'createdAt';
         const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC';
+        const categoryId = req.query.categoryId || '';
 
         const where = {
             isDeleted: false
         };
+
+        if (categoryId) {
+            where.categoryId = categoryId
+        }
 
         if (search) {
             where.name = {
@@ -400,6 +406,10 @@ const ProductServices = {
                 {
                     model: ProductImage,
                     as: 'images'
+                },
+                {
+                    model: Category,
+                    attributes: ['id', 'name', 'image']
                 }
             ]
         });
@@ -454,6 +464,7 @@ const ProductServices = {
                 name: product.name,
                 description: product.description,
                 price: product.price,
+                category: product.Category,
                 variants: Object.values(groupedVariants)
             };
         });

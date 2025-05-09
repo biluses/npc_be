@@ -11,15 +11,25 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.STRING,
                 allowNull: false
             },
-            description: DataTypes.TEXT,
+            description: {
+                type: DataTypes.TEXT,
+                allowNull: true
+            },
             price: {
                 type: DataTypes.DECIMAL(10, 2),
-                allowNull: false,
-                defaultValue: 0.00
+                allowNull: false
+            },
+            categoryId: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
+                references: {
+                    model: 'categories',
+                    key: 'id'
+                }
             },
             isPin: {
                 type: DataTypes.BOOLEAN,
-                defaultValue: false,
+                defaultValue: false
             },
             isDeleted: {
                 type: DataTypes.BOOLEAN,
@@ -42,6 +52,7 @@ module.exports = (sequelize, DataTypes) => {
 
     Product.associate = function (models) {
         // associations can be defined here
+        Product.belongsTo(models.Category, { foreignKey: 'categoryId' });
         Product.hasMany(models.ProductVariant, { foreignKey: 'productId', as: 'variants' });
         Product.hasMany(models.ProductImage, { foreignKey: 'productId', as: 'images' });
         Product.hasMany(models.OrderItem, { foreignKey: 'productId' });

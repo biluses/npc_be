@@ -1,4 +1,3 @@
-
 const userController = require('./userController')
 const policyController = require('./policyController')
 const postController = require('./postController')
