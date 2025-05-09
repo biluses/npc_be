@@ -320,6 +320,10 @@ const ProductServices = {
                 {
                     model: ProductImage,
                     as: 'images'
+                },
+                {
+                    model: Category,
+                    attributes: ['id', 'name', 'image']
                 }
             ]
         });
