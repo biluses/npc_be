@@ -1,5 +1,5 @@
 exports.seed = async function (knex) {
-    await knex('allPolicy').del()
+    await knex('allPolicy').truncate()
     await knex('allPolicy').insert([
         {
             type: "1",
@@ -7,7 +7,11 @@ exports.seed = async function (knex) {
         },
         {
             type: "2",
-            description: "This is TERMS AND CONDITIONS"
+            description: "This is Legal Policy"
+        },
+        {
+            type: "3",
+            description: "This is Cookies Policy"
         }
     ]);
 };

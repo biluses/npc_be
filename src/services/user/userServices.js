@@ -303,8 +303,6 @@ const UserServices = {
     },
 
     async getAllUsers(req, res, next) {
-        const { secretId } = req.loggedInUser;
-
         let { page, limit, isOwn } = req.query;
         limit = parseInt(limit) || 10;
         page = parseInt(page) || 1;
@@ -330,19 +328,22 @@ const UserServices = {
             return {
                 data: {
                     isNextPage: false,
-                    post: []
+                    users: []
                 }
             };
         }
 
         if (users.length > limit) {
-            if (users[limit]) {
-                isNextPage = true;
-                users.pop();
-            }
+            isNextPage = true;
+            users.pop(); // Remove the extra item used for checking next page
         }
 
-        return { users };
+        return {
+            data: {
+                isNextPage,
+                users
+            }
+        };
     },
 
     async updateProfile(req, res, next) {

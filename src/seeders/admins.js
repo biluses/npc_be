@@ -4,7 +4,7 @@ exports.seed = async function (knex) {
 
     const generatedHashPassword = await hashPassword('Admin@123')
 
-    await knex('admins').del()
+    await knex('admins').truncate()
     await knex('admins').insert([
         {
             name: 'Super Admin',

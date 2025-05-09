@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
             type: {
                 type: DataTypes.STRING,
                 validate: {
-                    isIn: [["1", "2"]], // 1= privacy policy, 2=terms and condition
+                    isIn: [["1", "2", "3"]], // 1= privacy policy, 2=legal, 3=cookies
                 },
             },
             description: {
