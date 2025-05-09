@@ -29,6 +29,7 @@ const ProductValidator = {
             description: Joi.string().allow(null, ''),
             price: Joi.number().required(),
             categoryId: Joi.number().required(),
+            isPin: Joi.boolean().default(false),
             variants: Joi.array().items(
                 Joi.object({
                     colorId: Joi.number().required(),
