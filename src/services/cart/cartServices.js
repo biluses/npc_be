@@ -1,28 +1,44 @@
-import { Cart, ProductVariant, Color, Size, Product } from "../../models";
+import { Cart, ProductVariant, Color, Size, Product, ProductImage } from "../../models";
 
 const CartServices = {
     async create(req, res, next) {
         const { productVariantId, quantity } = req.body;
+
+        if (!productVariantId || typeof quantity !== 'number' || quantity < 1) {
+            throw new Error("productVariantId and a valid quantity are required");
+        }
 
         const variant = await ProductVariant.findByPk(productVariantId);
         if (!variant) {
             throw new Error("Invalid product variant");
         }
 
-        const newQty = created ? quantity : cartItem.quantity + quantity;
+        const existingCartItem = await Cart.findOne({
+            where: {
+                userId: req.loggedInUser.id,
+                productVariantId
+            }
+        });
+
+        const newQty = existingCartItem ? existingCartItem.quantity + quantity : quantity;
+
         if (newQty > variant.quantity) {
             throw new Error(`Only ${variant.quantity} item(s) available in stock`);
         }
 
-        const [cartItem, created] = await Cart.findOrCreate({
-            where: { userId: req.loggedInUser.id, productVariantId },
-            defaults: { quantity }
-        });
-
-        if (!created) {
-            cartItem.quantity += quantity;
-            await cartItem.save();
+        let cartItem;
+        if (existingCartItem) {
+            existingCartItem.quantity = newQty;
+            await existingCartItem.save();
+            cartItem = existingCartItem;
+        } else {
+            cartItem = await Cart.create({
+                userId: req.loggedInUser.id,
+                productVariantId,
+                quantity
+            });
         }
+
         return {
             data: { cart: cartItem }
         };
@@ -67,7 +83,9 @@ const CartServices = {
     async delete(req, res, next) {
         const { cartId } = req.params;
 
-        const cartData = await Cart.findByPk(cartId)
+        const cartData = await Cart.findOne({
+            where: { id: cartId, userId: req.loggedInUser.id }
+        })
         if (!cartData) {
             throw new Error("Invalid cartId")
         }
@@ -78,23 +96,68 @@ const CartServices = {
     },
 
     async cartList(req, res, next) {
-
-        const cart = await Cart.findAll({
+        const cartItems = await Cart.findAll({
             where: { userId: req.loggedInUser.id },
-            include: [{
-                model: ProductVariant,
-                as: 'variant',
-                include: [
-                    { model: Product },
-                    { model: Color },
-                    { model: Size }
-                ]
-            }]
+            include: [
+                {
+                    model: ProductVariant,
+                    as: 'variant',
+                    include: [
+                        {
+                            model: Product,
+                            attributes: ['id', 'name', 'price'],
+                            include: [
+                                {
+                                    model: ProductImage,
+                                    as: 'images',
+                                    attributes: ['imageUrl'],
+                                    separate: true, // optional: ensures only relevant images
+                                    limit: 1
+                                }
+                            ]
+                        },
+                        {
+                            model: Color,
+                            attributes: ['id', 'name', 'code']
+                        },
+                        {
+                            model: Size,
+                            attributes: ['id', 'name']
+                        }
+                    ]
+                }
+            ]
+        });
+
+        const formatted = cartItems.map(item => {
+            const variant = item.variant || {};
+            const product = variant.Product || {};
+            const color = variant.Color || {};
+            const size = variant.Size || {};
+            const imageUrl = product.images?.[0]?.imageUrl || null;
+
+            return {
+                cartId: item.id,
+                productVariantId: variant.id,
+                quantity: item.quantity,
+                productName: product.name,
+                price: product.price,
+                color: {
+                    id: color.id,
+                    name: color.name,
+                    hexCode: color.hexCode
+                },
+                size: {
+                    id: size.id,
+                    name: size.name
+                },
+                image: imageUrl
+            };
         });
 
         return {
-            data: { cart }
-        }
+            data: { cart: formatted }
+        };
     },
 }
 
