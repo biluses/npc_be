@@ -1,8 +1,18 @@
 import { Cart, ProductVariant, Color, Size, Product } from "../../models";
 
-const PostServices = {
+const CartServices = {
     async create(req, res, next) {
         const { productVariantId, quantity } = req.body;
+
+        const variant = await ProductVariant.findByPk(productVariantId);
+        if (!variant) {
+            throw new Error("Invalid product variant");
+        }
+
+        const newQty = created ? quantity : cartItem.quantity + quantity;
+        if (newQty > variant.quantity) {
+            throw new Error(`Only ${variant.quantity} item(s) available in stock`);
+        }
 
         const [cartItem, created] = await Cart.findOrCreate({
             where: { userId: req.loggedInUser.id, productVariantId },
@@ -22,14 +32,34 @@ const PostServices = {
         const { cartId } = req.params;
         const { productVariantId, quantity } = req.body;
 
-        const cartItem = await Cart.findByPk(cartId);
-        if (!cartItem) throw new Error("Cart not found");
+        if (!productVariantId || typeof quantity !== 'number' || quantity < 1) {
+            throw new Error("productVariantId and valid quantity are required");
+        }
+
+        const cartItem = await Cart.findOne({
+            where: { id: cartId, userId: req.loggedInUser.id }
+        });
+
+        if (!cartItem) {
+            throw new Error("Cart item not found");
+        }
+
+        const variant = await ProductVariant.findByPk(productVariantId);
+        if (!variant) {
+            throw new Error("Invalid product variant");
+        }
+
+        // Check available stock
+        if (quantity > variant.quantity) {
+            throw new Error(`Only ${variant.quantity} item(s) available in stock`);
+        }
 
         cartItem.productVariantId = productVariantId;
         cartItem.quantity = quantity;
         await cartItem.save();
 
         return {
+            message: "Cart item updated successfully",
             data: { cart: cartItem }
         };
     },
@@ -38,7 +68,7 @@ const PostServices = {
         const { cartId } = req.params;
 
         const cartData = await Cart.findByPk(cartId)
-        if(!cartData){
+        if (!cartData) {
             throw new Error("Invalid cartId")
         }
 
@@ -68,4 +98,4 @@ const PostServices = {
     },
 }
 
-module.exports = PostServices;
+module.exports = CartServices;
