@@ -343,6 +343,7 @@ const ProductServices = {
                 };
             }
             groupedVariants[colorId].sizes.push({
+                variantId: v.id,
                 sizeId: v.sizeId,
                 size: v.Size,
                 quantity: v.quantity
